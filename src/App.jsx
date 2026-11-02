@@ -1,4 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import Lenis from 'lenis';
+import 'lenis/dist/lenis.css';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import HeaderHT from './components/HeaderHT';
 import ShowcaseStageHT from './components/ShowcaseStageHT';
 import WhatsInsideHT from './components/WhatsInsideHT';
@@ -10,8 +14,9 @@ import FooterHT from './components/FooterHT';
 import FixedIconsHT from './components/FixedIconsHT';
 import CartDrawerHT from './components/CartDrawerHT';
 import ModalSacredHT from './components/ModalSacredHT';
-import ScrollJarCanvas3D from './components/ScrollJarCanvas3D';
 import StickyBotanicalBackground from './components/StickyBotanicalBackground';
+
+gsap.registerPlugin(ScrollTrigger);
 
 export default function App() {
   const [cart, setCart] = useState([
@@ -26,6 +31,38 @@ export default function App() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalInitialTab, setModalInitialTab] = useState('ingredients');
+
+  // Buttery-smooth luxury momentum scroll engine with synchronized GSAP ScrollTrigger
+  useEffect(() => {
+    const lenis = new Lenis({
+      duration: 1.2,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      direction: 'vertical',
+      gestureDirection: 'vertical',
+      smoothWheel: true,
+      wheelMultiplier: 1.0,
+      touchMultiplier: 1.5,
+      infinite: false,
+    });
+
+    lenis.on('scroll', ScrollTrigger.update);
+
+    const tickerCallback = (time) => {
+      lenis.raf(time * 1000);
+    };
+
+    gsap.ticker.add(tickerCallback);
+    gsap.ticker.lagSmoothing(0);
+
+    window.__lenis = lenis;
+
+    return () => {
+      gsap.ticker.remove(tickerCallback);
+      lenis.off('scroll', ScrollTrigger.update);
+      lenis.destroy();
+      delete window.__lenis;
+    };
+  }, []);
 
   const handleAddToCart = (product) => {
     setCart((prev) => {
@@ -66,13 +103,10 @@ export default function App() {
   const cartTotalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
-    <div className="site_wrapper" style={{ overflowX: 'hidden', minHeight: '100vh', backgroundColor: 'transparent' }}>
+    <div className="site_wrapper" style={{ overflowX: 'clip', minHeight: '100vh', backgroundColor: 'transparent' }}>
       
       {/* Permanent Fixed Sticky Artisanal Background with Sacred Vedic Botanical Patterns */}
       <StickyBotanicalBackground />
-
-      {/* Hungry Tiger Scroll-Driven 3D Jar Canvas: Navigates across Negative Space */}
-      <ScrollJarCanvas3D maxScrollElementId="about" />
 
       {/* 1. Header (Hungry Tiger Header with Gold Dotted Line) */}
       <HeaderHT

@@ -21,7 +21,54 @@ export default function WhatsInsideHT({ onOpenModal }) {
   ];
 
   return (
-    <section className="inside_sides" id="about">
+    <section className="inside_sides" id="about" style={{ position: 'relative', zIndex: 30 }}>
+      {/* Molten Golden Ghee Inflow Transition from Hero Showcase */}
+      <div 
+        className="golden_ghee_flow_inflow" 
+        style={{
+          width: '100%',
+          height: '100px',
+          background: 'linear-gradient(180deg, rgba(247, 191, 53, 0.88) 0%, rgba(212, 143, 24, 0.42) 45%, rgba(122, 46, 18, 0.12) 80%, transparent 100%)',
+          position: 'relative',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'flex-start',
+          paddingTop: '14px',
+          pointerEvents: 'none',
+          overflow: 'hidden',
+          borderBottom: '1px solid rgba(247, 191, 53, 0.22)',
+        }}
+      >
+        <svg 
+          viewBox="0 0 1440 60" 
+          fill="none" 
+          style={{ 
+            position: 'absolute', 
+            top: 0, 
+            left: 0, 
+            width: '100%', 
+            height: '100%', 
+            opacity: 0.85, 
+            preserveAspectRatio: 'none' 
+          }}
+        >
+          <path d="M0,0 L1440,0 L1440,25 C1200,55 960,10 720,38 C480,65 240,15 0,38 Z" fill="url(#insideTopGheeGrad)" />
+          <defs>
+            <linearGradient id="insideTopGheeGrad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="#F7BF35" stopOpacity="0.9" />
+              <stop offset="50%" stopColor="#FFAE19" stopOpacity="1.0" />
+              <stop offset="100%" stopColor="#F7BF35" stopOpacity="0.9" />
+            </linearGradient>
+          </defs>
+        </svg>
+
+        <div style={{ position: 'relative', zIndex: 2, display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ color: '#1A0D06', fontFamily: 'var(--font-sans)', fontSize: '11px', fontWeight: 800, letterSpacing: '0.24em', textTransform: 'uppercase' }}>
+            ✦ THE BILONA TRANSFORMATION FLOWS INTO SAURASHTRA PURITY ✦
+          </span>
+        </div>
+      </div>
       
       {/* Upper Split Screen (Hungry Tiger: what's inside + list_icon + right image) */}
       <div className="flexbox_insides">

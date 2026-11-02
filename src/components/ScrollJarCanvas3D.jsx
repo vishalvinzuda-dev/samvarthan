@@ -141,6 +141,8 @@ export default function ScrollJarCanvas3D({ maxScrollElementId = 'about' }) {
       emissiveIntensity: 0.42,
       roughness: 0.32,
       metalness: 0.08,
+      transparent: true,
+      opacity: 1.0,
     });
     const gheeLiquid = new THREE.Mesh(gheeGeo, gheeMat);
     gheeLiquid.position.y = -0.19;
@@ -152,6 +154,8 @@ export default function ScrollJarCanvas3D({ maxScrollElementId = 'about' }) {
       color: 0xFFD85A,
       roughness: 0.16,
       metalness: 0.25,
+      transparent: true,
+      opacity: 1.0,
     });
     const gheeTop = new THREE.Mesh(gheeTopGeo, gheeTopMat);
     gheeTop.rotation.x = -Math.PI / 2;
@@ -343,6 +347,8 @@ export default function ScrollJarCanvas3D({ maxScrollElementId = 'about' }) {
       roughness: 0.72,
       metalness: 0.05,
       side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 1.0,
     });
     const labelMesh = new THREE.Mesh(labelGeo, labelMat);
     labelMesh.position.y = -0.16;
@@ -364,81 +370,129 @@ export default function ScrollJarCanvas3D({ maxScrollElementId = 'about' }) {
     jarGroup.add(threadMesh);
 
     // -------------------------------------------------------------------------
-    // E. BRUSHED SILVER / PLATINUM METALLIC LID (Directly From Agrumea Reference!)
+    // E. INDEPENDENT ROTATING & LIFTING TWIST LID (Prompt 02 Opening Sequence)
     // -------------------------------------------------------------------------
-    // Sleek brushed aluminium twist cap with subtle bevel and top reflection
+    // The lid is an independent group with authentic pivot points for unscrewing,
+    // lifting upward, tilting, and floating free to reveal the golden ghee within.
+    const lidGroup = new THREE.Group();
+    lidGroup.position.set(0, 1.15, 0);
+
     const lidMat = new THREE.MeshStandardMaterial({
       color: 0xDBE0E5,
       roughness: 0.24,
       metalness: 0.92,
+      transparent: true,
+      opacity: 1.0,
     });
 
+    // Sleek brushed aluminium twist cap cylinder
     const lidGeo = new THREE.CylinderGeometry(0.94, 0.94, 0.26, 64);
     const lidMesh = new THREE.Mesh(lidGeo, lidMat);
-    lidMesh.position.y = 1.15;
+    lidMesh.position.set(0, 0, 0);
     lidMesh.castShadow = true;
-    jarGroup.add(lidMesh);
+    lidGroup.add(lidMesh);
 
     // Top Rim Bevel (Smooth curved highlight edge)
     const lidBevelGeo = new THREE.TorusGeometry(0.93, 0.022, 16, 64);
     const lidBevel = new THREE.Mesh(lidBevelGeo, lidMat);
     lidBevel.rotation.x = Math.PI / 2;
-    lidBevel.position.y = 1.27;
-    jarGroup.add(lidBevel);
+    lidBevel.position.y = 0.12;
+    lidGroup.add(lidBevel);
 
     // Brushed Metallic Top Cap Disc
     const lidTopDiscGeo = new THREE.CircleGeometry(0.92, 64);
     const lidTopDisc = new THREE.Mesh(lidTopDiscGeo, lidMat);
     lidTopDisc.rotation.x = -Math.PI / 2;
-    lidTopDisc.position.y = 1.282;
-    jarGroup.add(lidTopDisc);
+    lidTopDisc.position.y = 0.132;
+    lidGroup.add(lidTopDisc);
 
-    // Subtle Champagne Gold Inlay Trim Ring on Top of Lid
+    // Champagne Gold Inlay Trim Ring on Top of Lid
     const goldMat = new THREE.MeshStandardMaterial({
       color: 0xDFC062,
       metalness: 0.88,
       roughness: 0.18,
+      transparent: true,
+      opacity: 1.0,
     });
     const lidGoldTrimGeo = new THREE.TorusGeometry(0.65, 0.015, 16, 64);
     const lidGoldTrim = new THREE.Mesh(lidGoldTrimGeo, goldMat);
     lidGoldTrim.rotation.x = Math.PI / 2;
-    lidGoldTrim.position.y = 1.286;
-    jarGroup.add(lidGoldTrim);
+    lidGoldTrim.position.y = 0.136;
+    lidGroup.add(lidGoldTrim);
 
     // Center Gold Monogram Disc on Lid
     const centerSealGeo = new THREE.CircleGeometry(0.24, 32);
     const centerSeal = new THREE.Mesh(centerSealGeo, goldMat);
     centerSeal.rotation.x = -Math.PI / 2;
-    centerSeal.position.y = 1.288;
-    jarGroup.add(centerSeal);
+    centerSeal.position.y = 0.138;
+    lidGroup.add(centerSeal);
+
+    jarGroup.add(lidGroup);
+
+    // -------------------------------------------------------------------------
+    // F. GOLDEN GHEE INNER MENISCUS (Revealed upon unscrewing)
+    // -------------------------------------------------------------------------
+    const gheeSurfaceGeo = new THREE.CircleGeometry(0.82, 48);
+    const gheeSurfaceMat = new THREE.MeshPhysicalMaterial({
+      color: 0xF7BF35,
+      roughness: 0.14,
+      metalness: 0.1,
+      transmission: 0.45,
+      ior: 1.48,
+      emissive: 0x8A4600,
+      emissiveIntensity: 0.2,
+      transparent: true,
+      opacity: 1.0,
+    });
+    const gheeSurfaceMesh = new THREE.Mesh(gheeSurfaceGeo, gheeSurfaceMat);
+    gheeSurfaceMesh.rotation.x = -Math.PI / 2;
+    gheeSurfaceMesh.position.y = 1.02;
+    jarGroup.add(gheeSurfaceMesh);
 
     // =========================================================================
-    // SCROLL-DRIVEN POSITION & SCALE (No mouse interaction!)
-    // Reference: Eat Hungry Tiger Tikka Masala Jar Hero Layout
+    // SCROLL-DRIVEN MOTION & TARGET VALUES (No mouse interaction!)
     // =========================================================================
+    // Initial hero state: Lowered jar with only top half visible at initial load
     let targetX = 0;
-    let targetY = -0.92;
-    let targetRotX = 0;
+    let targetY = -1.48;
+    let targetRotX = 0.04;
     let targetRotY = 0;
-    let targetScale = 0.68;
+    let targetRotZ = 0; // Jar roll/tilt (tilts ~35° left during pouring)
+    let targetScale = 0.84;
     let targetOpacity = 1.0;
+    let targetJarOpacity = 1.0; // Jar stays 100% visible!
+
+    let targetLidY = 0;
+    let targetLidX = 0;
+    let targetLidRotY = 0;
+    let targetLidRotZ = 0;
+    let targetLidRotX = 0;
 
     let currentX = 0;
-    let currentY = -0.92;
-    let currentRotX = 0;
+    let currentY = -1.48;
+    let currentRotX = 0.04;
     let currentRotY = 0;
-    let currentScale = 0.68;
+    let currentRotZ = 0;
+    let currentScale = 0.84;
+    let currentJarOpacity = 1.0;
 
+    let currentLidY = 0;
+    let currentLidX = 0;
+    let currentLidRotY = 0;
+    let currentLidRotZ = 0;
+    let currentLidRotX = 0;
     const handleScroll = () => {
       const isMobile = window.innerWidth < 768;
       const stageEl = document.getElementById('showcase-stage');
       
       let progress = 0;
-      if (stageEl) {
+      if (typeof window.__showcaseProgress === 'number') {
+        progress = window.__showcaseProgress;
+      } else if (stageEl) {
         const rect = stageEl.getBoundingClientRect();
         const scrollable = stageEl.offsetHeight - window.innerHeight;
         if (scrollable > 0) {
-          progress = Math.max(0, Math.min(1.1, -rect.top / scrollable));
+          progress = Math.max(0, Math.min(1.0, -rect.top / scrollable));
         }
       } else {
         progress = Math.min(1.0, window.scrollY / 2500);
@@ -449,89 +503,201 @@ export default function ScrollJarCanvas3D({ maxScrollElementId = 'about' }) {
       const halfWidth = Math.tan((38 * Math.PI / 180) / 2) * 5.2 * aspect;
       const dockX = isMobile ? 0 : Math.min(1.52, Math.max(1.18, halfWidth * 0.46));
 
-      // STAGE 0: HERO (0.0 -> 0.18)
-      // Upright, resting in bottom half with generous breathing negative space around typography
-      // Top lid emerges at ~56% viewport, jar body extends downward just like Hungry Tiger reference
-      if (progress <= 0.18) {
+      // -----------------------------------------------------------------------
+      // PHASE 1 & 2: HERO — LOWERED JAR (ONLY TOP HALF VISIBLE AT INITIAL) -> ASCENDS (0.00 -> 0.08)
+      // -----------------------------------------------------------------------
+      if (progress <= 0.08) {
+        const p = progress / 0.08;
+        const easeP = p * p * (3 - 2 * p);
+        const startY = isMobile ? -1.54 : -1.48;
+        const focalY = isMobile ? -0.30 : -0.24;
+        const startScale = isMobile ? 0.72 : 0.84;
+        const focalScale = isMobile ? 0.68 : 0.82;
+
         targetX = 0;
-        targetY = isMobile ? -1.22 : -1.34;
-        targetRotX = 0;
-        targetRotY = 0;
-        targetScale = isMobile ? 0.68 : 0.78;
+        targetY = THREE.MathUtils.lerp(startY, focalY, easeP);
+        targetRotX = THREE.MathUtils.lerp(0.04, 0.08, easeP);
+        targetRotY = THREE.MathUtils.lerp(0.0, 0.08, easeP);
+        targetRotZ = 0;
+        targetScale = THREE.MathUtils.lerp(startScale, focalScale, easeP);
         targetOpacity = 1.0;
+        targetJarOpacity = 1.0;
+
+        targetLidY = 0;
+        targetLidX = 0;
+        targetLidRotY = 0;
+        targetLidRotZ = 0;
+        targetLidRotX = 0;
       }
-      // STAGE 1: A NEW ANGLE OF PURITY (0.18 -> 0.48)
-      // Glides smoothly from bottom into RIGHT negative space, rotating to reveal honey transmission
-      else if (progress <= 0.48) {
-        const p = (progress - 0.18) / 0.30;
-        const startY = isMobile ? -1.22 : -1.34;
-        targetX = THREE.MathUtils.lerp(0, dockX, Math.min(1, p * 1.25));
+      // -----------------------------------------------------------------------
+      // PHASE 3: GLIDE TO RIGHT DOCK (0.08 -> 0.16)
+      // -----------------------------------------------------------------------
+      else if (progress <= 0.16) {
+        const p = (progress - 0.08) / 0.08;
+        const startY = isMobile ? -0.30 : -0.24;
+        targetX = THREE.MathUtils.lerp(0, dockX, Math.min(1, p * 1.2));
         targetY = THREE.MathUtils.lerp(startY, 0.02, p);
-        targetRotX = THREE.MathUtils.lerp(0, 0.12, p);
-        targetRotY = THREE.MathUtils.lerp(0, 0.62, p);
-        targetScale = isMobile ? 0.68 : 0.78;
+        targetRotX = THREE.MathUtils.lerp(0.08, 0.12, p);
+        targetRotY = THREE.MathUtils.lerp(0.08, 0.52, p);
+        targetRotZ = 0;
+        targetScale = isMobile ? 0.68 : 0.82;
         targetOpacity = 1.0;
+        targetJarOpacity = 1.0;
+
+        targetLidY = 0;
+        targetLidX = 0;
+        targetLidRotY = 0;
+        targetLidRotZ = 0;
+        targetLidRotX = 0;
       }
-      // STAGE 2: UNWRAP THE HERITAGE (0.48 -> 0.74)
-      // Glides to CENTER-TOP, pitches forward 35.5° looking down on turned lid, pointing to aroma notes
-      else if (progress <= 0.74) {
-        const p = (progress - 0.48) / 0.26;
-        targetX = THREE.MathUtils.lerp(dockX, 0, Math.min(1, p * 1.25));
-        targetY = THREE.MathUtils.lerp(0.02, isMobile ? 0.15 : 0.38, p);
-        targetRotX = THREE.MathUtils.lerp(0.12, 0.62, p);
-        targetRotY = THREE.MathUtils.lerp(0.62, 0.0, p);
-        targetScale = isMobile ? 0.64 : 0.78;
+      // -----------------------------------------------------------------------
+      // PHASE 4: EDITORIAL PHRASES ON LEFT — JAR DOCKED ON RIGHT (0.16 -> 0.44)
+      // -----------------------------------------------------------------------
+      else if (progress <= 0.44) {
+        const p = (progress - 0.16) / 0.28;
+        targetX = dockX;
+        targetY = 0.02 + Math.sin(p * Math.PI * 2) * 0.025;
+        targetRotX = 0.12 + Math.sin(p * Math.PI) * 0.02;
+        targetRotY = 0.52 + Math.cos(p * Math.PI) * 0.04;
+        targetRotZ = 0;
+        targetScale = isMobile ? 0.68 : 0.82;
         targetOpacity = 1.0;
+        targetJarOpacity = 1.0;
+
+        targetLidY = 0;
+        targetLidX = 0;
+        targetLidRotY = 0;
+        targetLidRotZ = 0;
+        targetLidRotX = 0;
       }
-      // STAGE 3: A NEW PERSPECTIVE ON WELLNESS (0.74 -> 0.98)
-      // Glides across to LEFT negative space, facing right CTA
-      else if (progress <= 0.98) {
-        const p = (progress - 0.74) / 0.24;
-        targetX = THREE.MathUtils.lerp(0, -dockX, Math.min(1, p * 1.25));
-        targetY = THREE.MathUtils.lerp(isMobile ? 0.15 : 0.38, 0.0, p);
-        targetRotX = THREE.MathUtils.lerp(0.62, 0.08, p);
-        targetRotY = THREE.MathUtils.lerp(0.0, -0.48, p);
-        targetScale = isMobile ? 0.62 : 0.76;
+      // -----------------------------------------------------------------------
+      // PHASE 5a: RE-CENTERING TO MIDDLE & LID LIFT AT "UNLOCKING LIQUID GOLD" (0.44 -> 0.58)
+      // -----------------------------------------------------------------------
+      else if (progress <= 0.58) {
+        const p = (progress - 0.44) / 0.14;
+        targetX = THREE.MathUtils.lerp(dockX, isMobile ? 0.02 : 0.05, p); // Centers in the middle!
+        targetY = THREE.MathUtils.lerp(0.02, -0.10, p);
+        targetRotX = THREE.MathUtils.lerp(0.12, 0.16, p);
+        targetRotY = THREE.MathUtils.lerp(0.52, -0.06, p);
+        targetRotZ = 0;
+        targetScale = THREE.MathUtils.lerp(isMobile ? 0.68 : 0.82, isMobile ? 0.74 : 0.86, p);
         targetOpacity = 1.0;
+        targetJarOpacity = 1.0; // JAR NEVER DISAPPEARS!
+
+        // Lid unscrews (720° spin) and lifts high above the open jar
+        targetLidRotY = p * Math.PI * 4;
+        targetLidY = p * 1.95;
+        targetLidX = p * 0.42;
+        targetLidRotZ = -p * 0.32;
+        targetLidRotX = -p * 0.15;
+
+        gheeSurfaceMat.emissiveIntensity = 0.2 + p * 0.65;
       }
-      // STAGE 4: EXIT INTO WHAT'S INSIDE (> 0.98)
+      // -----------------------------------------------------------------------
+      // PHASE 5b: JAR TILTS ON RIGHT TO POUR GHEE DROPLET (0.58 -> 0.70)
+      // Jar tilts ~35° left, mouth facing center-left, negative space for falling drop!
+      // -----------------------------------------------------------------------
+      else if (progress <= 0.70) {
+        const p = (progress - 0.58) / 0.12;
+        const pourDockX = isMobile ? 0.10 : Math.min(1.35, Math.max(0.95, halfWidth * 0.40));
+        targetX = THREE.MathUtils.lerp(isMobile ? 0.02 : 0.05, pourDockX, p);
+        targetY = -0.06;
+        targetRotX = 0.18;
+        targetRotY = THREE.MathUtils.lerp(-0.06, -0.15, p);
+        targetRotZ = THREE.MathUtils.lerp(0.0, 0.58, p); // ~35° left tilt
+        targetScale = isMobile ? 0.72 : 0.82;
+        targetOpacity = 1.0;
+        targetJarOpacity = 1.0; // JAR NEVER DISAPPEARS!
+
+        targetLidRotY = Math.PI * 4;
+        targetLidY = 1.95;
+        targetLidX = 0.42;
+        targetLidRotZ = -0.32;
+        targetLidRotX = -0.15;
+
+        gheeSurfaceMat.emissiveIntensity = 0.85;
+      }
+      // -----------------------------------------------------------------------
+      // PHASE 5c: JAR STOPS STICKY SCROLL AT POURING POSITION (0.70 -> 1.00)
+      // Jar holds position on the right, golden drop falls down to ocean at the bottom!
+      // -----------------------------------------------------------------------
       else {
-        const p = Math.min(1, (progress - 0.98) / 0.08);
-        targetX = -dockX;
-        targetY = THREE.MathUtils.lerp(0.0, -0.65, p);
-        targetRotX = 0.08;
-        targetRotY = -0.48;
-        targetScale = THREE.MathUtils.lerp(0.76, 0.58, p);
-        targetOpacity = Math.max(0, 1.0 - p * 1.5);
+        const pourDockX = isMobile ? 0.10 : Math.min(1.35, Math.max(0.95, halfWidth * 0.40));
+        targetX = pourDockX;
+        targetY = -0.06;
+        targetRotX = 0.18;
+        targetRotY = -0.15;
+        targetRotZ = 0.58;
+        targetScale = isMobile ? 0.72 : 0.82;
+        targetJarOpacity = 1.0; // 100% VISIBLE!
+        targetOpacity = 1.0;
+
+        targetLidRotY = Math.PI * 4;
+        targetLidY = 1.95;
+        targetLidX = 0.42;
+        targetLidRotZ = -0.32;
+        targetLidRotX = -0.15;
+
+        gheeSurfaceMat.emissiveIntensity = 0.85;
       }
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     handleScroll();
 
-    // RENDER LOOP (Pure scroll-driven damping, no mouse parallax)
+    // RENDER LOOP (High-performance delta-damped scroll animation)
     let animationFrameId;
     let clock = new THREE.Clock();
 
     const animate = () => {
       animationFrameId = requestAnimationFrame(animate);
+      const delta = Math.min(0.1, clock.getDelta());
       const elapsed = clock.getElapsedTime();
 
-      // Smooth Lerp Damping (60fps / 120fps)
-      currentX += (targetX - currentX) * 0.085;
-      currentY += (targetY - currentY) * 0.085;
-      currentRotX += (targetRotX - currentRotX) * 0.085;
-      currentRotY += (targetRotY - currentRotY) * 0.085;
-      currentScale += (targetScale - currentScale) * 0.085;
+      // Sample scroll state per-frame for buttery sync with Lenis momentum
+      handleScroll();
 
-      // Subtle, gentle organic breath floating (very subtle ±0.015)
-      const floatY = Math.sin(elapsed * 1.5) * 0.016;
+      // Frame-rate independent exponential damping
+      const damp = 1 - Math.exp(-14.0 * delta);
+      const dampLid = 1 - Math.exp(-15.0 * delta);
+
+      currentX += (targetX - currentX) * damp;
+      currentY += (targetY - currentY) * damp;
+      currentRotX += (targetRotX - currentRotX) * damp;
+      currentRotY += (targetRotY - currentRotY) * damp;
+      currentRotZ += (targetRotZ - currentRotZ) * damp; // Damp leftward tilt
+      currentScale += (targetScale - currentScale) * damp;
+      currentJarOpacity += (targetJarOpacity - currentJarOpacity) * damp;
+
+      // Update jar materials opacity
+      glassMat.opacity = 0.32 * currentJarOpacity;
+      gheeMat.opacity = currentJarOpacity;
+      gheeTopMat.opacity = currentJarOpacity;
+      labelMat.opacity = currentJarOpacity;
+      goldMat.opacity = currentJarOpacity;
+      lidMat.opacity = currentJarOpacity;
+      gheeSurfaceMat.opacity = currentJarOpacity;
+      jarGroup.visible = currentJarOpacity > 0.005;
+
+      currentLidY += (targetLidY - currentLidY) * dampLid;
+      currentLidX += (targetLidX - currentLidX) * dampLid;
+      currentLidRotY += (targetLidRotY - currentLidRotY) * dampLid;
+      currentLidRotZ += (targetLidRotZ - currentLidRotZ) * dampLid;
+      currentLidRotX += (targetLidRotX - currentLidRotX) * dampLid;
+
+      // Subtle, gentle organic breath floating (±0.012)
+      const floatY = Math.sin(elapsed * 1.5) * 0.012;
 
       jarGroup.position.x = currentX;
       jarGroup.position.y = currentY + floatY;
       jarGroup.rotation.x = currentRotX;
       jarGroup.rotation.y = currentRotY;
+      jarGroup.rotation.z = currentRotZ; // Rotates ~35° to the left
       jarGroup.scale.set(currentScale, currentScale, currentScale);
+
+      // Independent Lid Transform
+      lidGroup.position.set(currentLidX, 1.15 + currentLidY, 0);
+      lidGroup.rotation.set(currentLidRotX, currentLidRotY, currentLidRotZ);
 
       // Update DOM opacity and visibility directly
       if (domElement) {
@@ -570,13 +736,14 @@ export default function ScrollJarCanvas3D({ maxScrollElementId = 'about' }) {
     <div 
       ref={mountRef}
       style={{
-        position: 'fixed',
+        position: 'absolute',
         top: 0,
         left: 0,
         width: '100vw',
         height: '100vh',
         pointerEvents: 'none',
-        zIndex: 50,
+        zIndex: 1, // Behind text, above background
+        overflow: 'hidden',
       }}
     />
   );
